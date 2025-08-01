@@ -6,8 +6,8 @@ function plot_filter_factors()
 %% 1) Set up Test Problem
 n = 32;
 % Select the problem to run. 'deriv2' matches the paper's figures.
- %[A, b, x_true] = deriv2(n);
-[A, b, x_true] = shaw(n);
+ [A, b, x_true] = deriv2(n);
+%[A, b, x_true] = shaw(n);
 %[A, b, x_true] = heat(n);
 
 %% 2) Algorithm Parameters
@@ -22,10 +22,10 @@ DeltaM  = 1e-5 * randn(size(A'));
 %% 3) Run Each Method & Collect Full Iterative History
 fprintf('Running GMRES variants...\n');
 
-[x_ab, ~, ~, it_ab, phi_ab_final, dphi_ab_final, phi_ab_iter,  dphi_ab_iter] = ABgmres_nonhybrid_bounds(A, B, b, x_true, tol, maxit, DeltaM);
-[x_ba, ~, ~, it_ba, phi_ba_final, dphi_ba_final, phi_ba_iter,  dphi_ba_iter] = BAgmres_nonhybrid_bounds(A, B, b, x_true, tol, maxit, DeltaM);
-[x_hab, ~, ~, it_hab, phi_hab_final, dphi_hab_final, phi_hab_iter, dphi_hab_iter] = ABgmres_hybrid_bounds(A, B, b, x_true, tol, maxit, lambda, DeltaM);
-[x_hba, ~, ~, it_hba, phi_hba_final, dphi_hba_final, phi_hba_iter, dphi_hba_iter] = BAgmres_hybrid_bounds(A, B, b, x_true, tol, maxit, lambda, DeltaM);
+[x_ab, err_ab, res_ab, it_ab, phi_ab_final, dphi_ab_final, phi_ab_iter,  dphi_ab_iter] = ABgmres_nonhybrid_bounds(A, B, b, x_true, tol, maxit, DeltaM);
+[x_ba, err_ba, res_ba, it_ba, phi_ba_final, dphi_ba_final, phi_ba_iter,  dphi_ba_iter] = BAgmres_nonhybrid_bounds(A, B, b, x_true, tol, maxit, DeltaM);
+[x_hab, err_hab, res_hab, it_hab, phi_hab_final, dphi_hab_final, phi_hab_iter, dphi_hab_iter] = ABgmres_hybrid_bounds(A, B, b, x_true, tol, maxit, lambda, DeltaM);
+[x_hba, err_hba, res_hba, it_hba, phi_hba_final, dphi_hba_final, phi_hba_iter, dphi_hba_iter] = BAgmres_hybrid_bounds(A, B, b, x_true, tol, maxit, lambda, DeltaM);
 
 fprintf('All methods complete.\n');
 
@@ -60,7 +60,6 @@ legend('Theoretical', 'Empirical', 'Location', 'Best');
 
 % Subplot 2: non-hybrid BA
 subplot(2,2,2);
-% CORRECTED: Use the correct variable 'phi_ba_final'
 kmin = min(numel(phi_ba_final), numel(Phi_emp_ba));
 plot(1:kmin, real(phi_ba_final(1:kmin)), '--', 'LineWidth', 1.6); hold on;
 plot(1:kmin, real(Phi_emp_ba(1:kmin)), 'o-', 'MarkerSize', 4);
@@ -71,7 +70,6 @@ legend('Theoretical', 'Empirical', 'Location', 'Best');
 
 % Subplot 3: hybrid AB
 subplot(2,2,3);
-% CORRECTED: Use the correct variable 'phi_hab_final'
 kmin = min(numel(phi_hab_final), numel(Phi_emp_hab));
 plot(1:kmin, real(phi_hab_final(1:kmin)), '--', 'LineWidth', 1.6); hold on;
 plot(1:kmin, real(Phi_emp_hab(1:kmin)), 'o-', 'MarkerSize', 4);
@@ -82,7 +80,6 @@ legend('Theoretical', 'Empirical', 'Location', 'Best');
 
 % Subplot 4: hybrid BA
 subplot(2,2,4);
-% CORRECTED: Use the correct variable 'phi_hba_final'
 kmin = min(numel(phi_hba_final), numel(Phi_emp_hba));
 plot(1:kmin, real(phi_hba_final(1:kmin)), '--', 'LineWidth', 1.6); hold on;
 plot(1:kmin, real(Phi_emp_hba(1:kmin)), 'o-', 'MarkerSize', 4);
@@ -96,7 +93,6 @@ legend('Theoretical', 'Empirical', 'Location', 'Best');
 k_values = [2, 16, 32];
 figure('Name', 'Evolution of Theoretical Filter Factors', 'Position', [100 100 1200 450]);
 
-% --- MODIFICATION: Use tiledlayout for better spacing ---
 t = tiledlayout(1, length(k_values), 'TileSpacing', 'compact', 'Padding', 'compact');
 title(t, 'Evolution of Theoretical Filter Factors for Different Iterations (k)', 'FontSize', 14);
 
@@ -104,12 +100,11 @@ title(t, 'Evolution of Theoretical Filter Factors for Different Iterations (k)',
 for i = 1:length(k_values)
     k = k_values(i);
     
-    % --- MODIFICATION: Use nexttile instead of subplot ---
     nexttile; 
     hold on;
     lw = 1.6;
 
-    % Plot each method for the current k, with safety checks
+    % Plot each method for the current k
     if k <= it_ab
         plot(1:k, real(phi_ab_iter{k}), '--', 'LineWidth', lw, 'DisplayName', 'non-hybrid AB');
     end
@@ -127,16 +122,15 @@ for i = 1:length(k_values)
     grid on;
     xlabel('Mode index i');
     ylabel('Filter factor \phi_{i,k}');
-    title(sprintf('k = %d', k)); % Simpler title for each subplot
+    title(sprintf('k = %d', k)); 
     legend('Location', 'Best');
-    ylim([-0.2, 1.2]); % Consistent y-axis for comparison
+    ylim([-0.2, 1.2]); 
 end
 
 %% Plot 3: Evolution for Each Method
 k_values = [2, 16, 32];
 figure('Name', 'Filter Factor Evolution per Method', 'Position', [100 100 900 700]);
 
-% Use tiledlayout for clean spacing
 t = tiledlayout(2, 2, 'TileSpacing', 'compact', 'Padding', 'compact');
 title(t, 'Evolution of Theoretical Filter Factors for Each GMRES Variant', 'FontSize', 14);
 
@@ -226,7 +220,7 @@ plot_bound_magnitudes_tile(ax4, dphi_hba_iter, it_hba, k_values, colors, 'hybrid
 
 end
 
-% --- MODIFIED Helper function for plotting bound MAGNITUDES ---
+% --- Helper function for plotting bound MAGNITUDES ---
 function plot_bound_magnitudes_tile(ax, dphi_iter, iters, k_vals, colors, plot_title)
     % This local function plots the MAGNITUDE of the perturbation bounds on a log scale.
     hold(ax, 'on');
@@ -250,3 +244,72 @@ function plot_bound_magnitudes_tile(ax, dphi_iter, iters, k_vals, colors, plot_t
     legend(ax, 'Location', 'Best');
 end
 
+%% Plot 5: Unified Convergence History
+
+figure('Name', 'Unified Convergence History', 'Position', [100 100 1000 400]);
+lw = 1.8;
+
+% Subplot for Relative Error
+subplot(1, 2, 1);
+semilogy(1:it_ab, err_ab, '--', 'LineWidth', lw, 'DisplayName', 'non-hybrid AB'); hold on;
+semilogy(1:it_ba, err_ba, ':', 'LineWidth', lw, 'DisplayName', 'non-hybrid BA');
+semilogy(1:it_hab, err_hab, '-', 'LineWidth', lw, 'DisplayName', 'hybrid AB');
+semilogy(1:it_hba, err_hba, '-.', 'LineWidth', lw, 'DisplayName', 'hybrid BA');
+hold off;
+title('Relative Error vs. Iteration');
+xlabel('Iteration k');
+ylabel('||x_k - x_{true}|| / ||x_{true}||');
+legend('Location', 'Best');
+grid on;
+ylim([1e-4, 2]); % Adjust ylim as needed
+
+% Subplot for Relative Residual
+subplot(1, 2, 2);
+semilogy(1:it_ab, res_ab, '--', 'LineWidth', lw, 'DisplayName', 'non-hybrid AB'); hold on;
+semilogy(1:it_ba, res_ba, ':', 'LineWidth', lw, 'DisplayName', 'non-hybrid BA');
+semilogy(1:it_hab, res_hab, '-', 'LineWidth', lw, 'DisplayName', 'hybrid AB');
+semilogy(1:it_hba, res_hba, '-.', 'LineWidth', lw, 'DisplayName', 'hybrid BA');
+hold off;
+title('Relative Residual vs. Iteration');
+xlabel('Iteration k');
+ylabel('||b - Ax_k|| / ||b||');
+legend('Location', 'Best');
+grid on;
+ylim([1e-7, 2]); % Adjust ylim as needed
+
+%% Plot 6: Visual Comparison of Final Solutions
+fprintf('Generating final solution comparison plot...\n');
+
+figure('Name', 'Final Solution Comparison', 'Position', [100 100 900 700]);
+t = tiledlayout(2, 2, 'TileSpacing', 'compact', 'Padding', 'compact');
+title(t, 'Comparison of Final Computed Solutions vs. True Solution', 'FontSize', 14);
+
+% Non-hybrid AB
+nexttile;
+plot(x_true, 'k-', 'LineWidth', 2, 'DisplayName', 'True Solution'); hold on;
+plot(x_ab, 'r--', 'LineWidth', 1.5, 'DisplayName', 'Computed (AB)');
+hold off; grid on; title('non-hybrid AB-GMRES');
+xlabel('Element index'); ylabel('Value'); legend('Location', 'Best');
+
+% Non-hybrid BA
+nexttile;
+plot(x_true, 'k-', 'LineWidth', 2, 'DisplayName', 'True Solution'); hold on;
+plot(x_ba, 'b--', 'LineWidth', 1.5, 'DisplayName', 'Computed (BA)');
+hold off; grid on; title('non-hybrid BA-GMRES');
+xlabel('Element index'); legend('Location', 'Best');
+
+% Hybrid AB
+nexttile;
+plot(x_true, 'k-', 'LineWidth', 2, 'DisplayName', 'True Solution'); hold on;
+plot(x_hab, 'r-', 'LineWidth', 1.5, 'DisplayName', 'Computed (Hybrid AB)');
+hold off; grid on; title('hybrid AB-GMRES');
+xlabel('Element index'); ylabel('Value'); legend('Location', 'Best');
+
+% Hybrid BA
+nexttile;
+plot(x_true, 'k-', 'LineWidth', 2, 'DisplayName', 'True Solution'); hold on;
+plot(x_hba, 'b-', 'LineWidth', 1.5, 'DisplayName', 'Computed (Hybrid BA)');
+hold off; grid on; title('hybrid BA-GMRES');
+xlabel('Element index'); legend('Location', 'Best');
+
+fprintf('All plotting complete.\n');
